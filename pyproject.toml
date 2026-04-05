@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "rag-benchmark"
+version = "0.1.0"
+requires-python = "==3.11.*"
+description = "Reproducible benchmark comparing 10 RAG architectures on HotpotQA"
+readme = "README.md"
+license = { text = "MIT" }
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["rag_patterns*", "evaluation*", "scripts*"]

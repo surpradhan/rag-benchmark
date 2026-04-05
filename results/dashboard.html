@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Architecture Benchmark — Results Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: #6c63ff;
+    --accent2: #00d4aa;
+    --accent3: #ff6b6b;
+    --accent4: #ffd166;
+    --text: #e8eaf0;
+    --text-muted: #7b82a0;
+    --text-dim: #4a5070;
+    --green: #00d4aa;
+    --red: #ff6b6b;
+    --yellow: #ffd166;
+    --blue: #6c63ff;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, #1a1d27 0%, #12142090 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+  .header-left h1 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(90deg, #fff 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header-left p {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .header-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+  }
+  .badge.accent { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Layout ── */
+  main { padding: 32px 40px; max-width: 1400px; margin: 0 auto; }
+  section { margin-bottom: 40px; }
+  .section-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Stat cards ── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .stat-card:hover { border-color: var(--accent); }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.purple::before { background: var(--accent); }
+  .stat-card.yellow::before { background: var(--yellow); }
+  .stat-card.red::before { background: var(--red); }
+  .stat-card.teal::before { background: var(--accent2); }
+  .stat-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .stat-value.green { color: var(--green); }
+  .stat-value.purple { color: var(--accent); }
+  .stat-value.yellow { color: var(--yellow); }
+  .stat-value.red { color: var(--red); }
+  .stat-sub {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+  .stat-sub strong { color: var(--text); }
+
+  /* ── Charts grid ── */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 900px) { .chart-grid { grid-template-columns: 1fr; } }
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+  .chart-card h3 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .chart-card p {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+  .chart-wrap { position: relative; height: 260px; }
+
+  /* ── Results table ── */
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .table-toolbar {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .table-toolbar h3 { font-size: 0.85rem; font-weight: 600; }
+  .sort-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .sort-btn {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .sort-btn:hover, .sort-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  thead th {
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody tr {
+    border-bottom: 1px solid rgba(46,51,80,0.5);
+    transition: background 0.15s;
+  }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr:last-child { border-bottom: none; }
+  td { padding: 12px 16px; white-space: nowrap; }
+  td.pattern-cell { font-weight: 600; color: var(--text); }
+  .pattern-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pattern-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .metric-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+  }
+  .metric-bar-bg {
+    flex: 1;
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .metric-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+  .metric-val {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    min-width: 36px;
+    text-align: right;
+    font-size: 0.8rem;
+  }
+  .sig-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+    letter-spacing: 0.05em;
+  }
+  .sig-better { background: rgba(0,212,170,0.12); color: var(--green); }
+  .sig-worse  { background: rgba(255,107,107,0.12); color: var(--red); }
+  .sig-ns     { background: rgba(123,130,160,0.12); color: var(--text-muted); }
+  .sig-baseline { background: rgba(108,99,255,0.12); color: var(--accent); }
+  .latency-val { color: var(--text-muted); font-size: 0.78rem; }
+  .tokens-val  { color: var(--text-muted); font-size: 0.78rem; }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    padding: 32px 40px;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+  }
+  footer a { color: var(--text-muted); text-decoration: none; }
+  footer a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>RAG Architecture Benchmark</h1>
+    <p>10 patterns + 2 baselines · HotpotQA · 500 questions · 3 runs each</p>
+  </div>
+  <div class="header-badges">
+    <span class="badge accent">Llama 3.1 8B</span>
+    <span class="badge">all-MiniLM-L6-v2</span>
+    <span class="badge">FAISS · BM25</span>
+    <span class="badge">seed=42</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- Summary cards -->
+  <section>
+    <div class="section-title">Summary</div>
+    <div class="stat-grid">
+      <div class="stat-card green">
+        <div class="stat-label">Best Recall@5</div>
+        <div class="stat-value green">0.706</div>
+        <div class="stat-sub"><strong>Re-ranking RAG</strong> · +15.9% vs baseline</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-label">Best Recall@10</div>
+        <div class="stat-value purple">0.745</div>
+        <div class="stat-sub"><strong>Hybrid RAG</strong> · +8.9% vs baseline</div>
+      </div>
+      <div class="stat-card yellow">
+        <div class="stat-label">Fastest Pattern</div>
+        <div class="stat-value yellow">6.7s</div>
+        <div class="stat-sub"><strong>Parent-Child RAG</strong> · p50 latency</div>
+      </div>
+      <div class="stat-card teal">
+        <div class="stat-label">Most Token Efficient</div>
+        <div class="stat-value" style="color:var(--accent2)">786</div>
+        <div class="stat-sub"><strong>Graph RAG</strong> · avg tokens / query</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Upper Bound Gap</div>
+        <div class="stat-value red">29.4%</div>
+        <div class="stat-sub"><strong>Oracle vs Best</strong> · room to improve</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Charts -->
+  <section>
+    <div class="section-title">Visualizations</div>
+    <div class="chart-grid">
+
+      <div class="chart-card">
+        <h3>Recall@5 by Pattern</h3>
+        <p>Sorted descending · dashed line = Basic RAG baseline</p>
+        <div class="chart-wrap"><canvas id="recallChart"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Recall@5 vs. Recall@10</h3>
+        <p>Recall jump from K=5 to K=10 reveals retrieval breadth</p>
+        <div class="chart-wrap"><canvas id="recallKChart"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Latency vs. Recall@5</h3>
+        <p>Top-right = ideal · bubble size = avg token count</p>
+        <div class="chart-wrap"><canvas id="latencyChart"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Token Cost per Query</h3>
+        <p>Average tokens used per question (both LLM calls included)</p>
+        <div class="chart-wrap"><canvas id="tokenChart"></canvas></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Results table -->
+  <section>
+    <div class="section-title">Full Results</div>
+    <div class="table-card">
+      <div class="table-toolbar">
+        <h3>All Patterns · Mean over 3 runs</h3>
+        <div class="sort-btns">
+          <button class="sort-btn active" onclick="sortTable('recall5')">Recall@5</button>
+          <button class="sort-btn" onclick="sortTable('recall10')">Recall@10</button>
+          <button class="sort-btn" onclick="sortTable('precision5')">Precision@5</button>
+          <button class="sort-btn" onclick="sortTable('latency')">Latency</button>
+          <button class="sort-btn" onclick="sortTable('tokens')">Tokens</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="resultsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Pattern</th>
+              <th>Recall@5</th>
+              <th>Recall@10</th>
+              <th>Precision@5</th>
+              <th>p50 Latency</th>
+              <th>Avg Tokens</th>
+              <th>vs Baseline</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  RAG Architecture Benchmark · HotpotQA Distractor Dev · Llama 3.1 8B · <a href="https://github.com">GitHub</a>
+</footer>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────
+const PATTERNS = [
+  { id: 'oracle_rag',       label: 'Oracle RAG',        recall5: 1.000, recall10: 1.000, prec5: 0.400, latency: 2210,  tokens: 178,   sig: 'upper' },
+  { id: 'reranking_rag',    label: 'Re-ranking RAG',    recall5: 0.706, recall10: 0.732, prec5: 0.284, latency: 7947,  tokens: 858,   sig: 'better', delta: '+15.9%', p: '***' },
+  { id: 'hybrid_rag',       label: 'Hybrid RAG',        recall5: 0.651, recall10: 0.745, prec5: 0.262, latency: 6829,  tokens: 864,   sig: 'better', delta: '+6.9%',  p: '***' },
+  { id: 'basic_rag',        label: 'Basic RAG',         recall5: 0.609, recall10: 0.684, prec5: 0.245, latency: 6774,  tokens: 833,   sig: 'baseline' },
+  { id: 'multiquery_rag',   label: 'Multi-query RAG',   recall5: 0.607, recall10: 0.685, prec5: 0.244, latency: 10000, tokens: 952,   sig: 'ns',     delta: '−0.3%',  p: 'ns' },
+  { id: 'parent_child_rag', label: 'Parent-Child RAG',  recall5: 0.605, recall10: 0.679, prec5: 0.243, latency: 6707,  tokens: 913,   sig: 'worse',  delta: '−0.7%',  p: '**' },
+  { id: 'corrective_rag',   label: 'Corrective RAG',    recall5: 0.604, recall10: 0.681, prec5: 0.243, latency: 15596, tokens: 2415,  sig: 'worse',  delta: '−0.8%',  p: '**' },
+  { id: 'hyde_rag',         label: 'HyDE',              recall5: 0.602, recall10: 0.679, prec5: 0.242, latency: 14046, tokens: 1039,  sig: 'ns',     delta: '−1.1%',  p: 'ns' },
+  { id: 'self_query_rag',   label: 'Self-Query RAG',    recall5: 0.579, recall10: 0.645, prec5: 0.233, latency: 8763,  tokens: 900,   sig: 'worse',  delta: '−4.9%',  p: '***' },
+  { id: 'agentic_rag',      label: 'Agentic RAG',       recall5: 0.498, recall10: 0.508, prec5: 0.200, latency: 12206, tokens: 858,   sig: 'worse',  delta: '−18.2%', p: '***' },
+  { id: 'graph_rag',        label: 'Graph RAG',         recall5: 0.348, recall10: 0.559, prec5: 0.140, latency: 5964,  tokens: 786,   sig: 'worse',  delta: '−42.9%', p: '***' },
+  { id: 'zero_retrieval',   label: 'Zero Retrieval',    recall5: 0.000, recall10: 0.000, prec5: 0.000, latency: 568,   tokens: 36,    sig: 'lower' },
+];
+
+const COLORS = [
+  '#6c63ff','#00d4aa','#ffd166','#ff6b6b','#4cc9f0','#f72585',
+  '#7209b7','#3a0ca3','#4361ee','#4895ef','#560bad','#b5179e'
+];
+
+// ── Chart.js defaults ────────────────────────────────────────────────────
+Chart.defaults.color = '#7b82a0';
+Chart.defaults.font.family = "'Inter', -apple-system, sans-serif";
+Chart.defaults.font.size = 11;
+
+const gridColor = 'rgba(46,51,80,0.6)';
+
+// ── Recall@5 bar chart ───────────────────────────────────────────────────
+const sorted = [...PATTERNS].sort((a,b) => b.recall5 - a.recall5);
+new Chart(document.getElementById('recallChart'), {
+  type: 'bar',
+  data: {
+    labels: sorted.map(p => p.label),
+    datasets: [{
+      data: sorted.map(p => p.recall5),
+      backgroundColor: sorted.map(p =>
+        p.sig === 'baseline' ? '#6c63ff' :
+        p.sig === 'better'   ? 'rgba(0,212,170,0.7)' :
+        p.sig === 'worse'    ? 'rgba(255,107,107,0.6)' :
+        p.sig === 'upper'    ? 'rgba(255,255,255,0.15)' :
+        p.sig === 'lower'    ? 'rgba(255,107,107,0.2)' :
+        'rgba(108,99,255,0.4)'
+      ),
+      borderColor: sorted.map(p =>
+        p.sig === 'baseline' ? '#6c63ff' :
+        p.sig === 'better'   ? '#00d4aa' :
+        p.sig === 'worse'    ? '#ff6b6b' :
+        p.sig === 'upper'    ? 'rgba(255,255,255,0.3)' :
+        p.sig === 'lower'    ? 'rgba(255,107,107,0.4)' :
+        'rgba(108,99,255,0.7)'
+      ),
+      borderWidth: 1.5,
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      annotation: {},
+      tooltip: {
+        callbacks: {
+          label: ctx => ` Recall@5: ${ctx.parsed.y.toFixed(3)}`
+        }
+      }
+    },
+    scales: {
+      x: { grid: { color: gridColor }, ticks: { maxRotation: 45, font: { size: 10 } } },
+      y: { grid: { color: gridColor }, min: 0, max: 1.05,
+           ticks: { callback: v => v.toFixed(1) } }
+    }
+  },
+  plugins: [{
+    id: 'baseline',
+    afterDraw(chart) {
+      const { ctx, chartArea, scales } = chart;
+      const y = scales.y.getPixelForValue(0.609);
+      ctx.save();
+      ctx.setLineDash([5, 4]);
+      ctx.strokeStyle = 'rgba(108,99,255,0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(chartArea.left, y);
+      ctx.lineTo(chartArea.right, y);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }]
+});
+
+// ── Recall@5 vs Recall@10 grouped bar ───────────────────────────────────
+const nonTrivial = PATTERNS.filter(p => !['oracle_rag','zero_retrieval'].includes(p.id))
+                            .sort((a,b) => b.recall5 - a.recall5);
+new Chart(document.getElementById('recallKChart'), {
+  type: 'bar',
+  data: {
+    labels: nonTrivial.map(p => p.label),
+    datasets: [
+      {
+        label: 'Recall@5',
+        data: nonTrivial.map(p => p.recall5),
+        backgroundColor: 'rgba(108,99,255,0.7)',
+        borderColor: '#6c63ff',
+        borderWidth: 1.5,
+        borderRadius: 3,
+      },
+      {
+        label: 'Recall@10',
+        data: nonTrivial.map(p => p.recall10),
+        backgroundColor: 'rgba(0,212,170,0.5)',
+        borderColor: '#00d4aa',
+        borderWidth: 1.5,
+        borderRadius: 3,
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top', labels: { boxWidth: 12, padding: 12 } },
+      tooltip: { mode: 'index' }
+    },
+    scales: {
+      x: { grid: { color: gridColor }, ticks: { maxRotation: 45, font: { size: 10 } } },
+      y: { grid: { color: gridColor }, min: 0, max: 1.0,
+           ticks: { callback: v => v.toFixed(1) } }
+    }
+  }
+});
+
+// ── Latency vs Recall@5 scatter ──────────────────────────────────────────
+const scatterData = nonTrivial.map((p, i) => ({
+  x: p.latency / 1000,
+  y: p.recall5,
+  r: Math.sqrt(p.tokens) * 1.5,
+  label: p.label,
+  color: COLORS[i % COLORS.length]
+}));
+
+new Chart(document.getElementById('latencyChart'), {
+  type: 'bubble',
+  data: {
+    datasets: scatterData.map(d => ({
+      label: d.label,
+      data: [{ x: d.x, y: d.y, r: Math.sqrt(d.r) * 1.2 }],
+      backgroundColor: d.color + '55',
+      borderColor: d.color,
+      borderWidth: 1.5,
+    }))
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          title: items => items[0].dataset.label,
+          label: item => [
+            ` Latency p50: ${item.parsed.x.toFixed(1)}s`,
+            ` Recall@5: ${item.parsed.y.toFixed(3)}`
+          ]
+        }
+      }
+    },
+    scales: {
+      x: { grid: { color: gridColor }, title: { display: true, text: 'p50 Latency (s)', color: '#7b82a0' } },
+      y: { grid: { color: gridColor }, min: 0.3, max: 0.85,
+           title: { display: true, text: 'Recall@5', color: '#7b82a0' } }
+    }
+  },
+  plugins: [{
+    id: 'labels',
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart;
+      chart.data.datasets.forEach((ds, i) => {
+        const meta = chart.getDatasetMeta(i);
+        if (!meta.hidden && meta.data[0]) {
+          const pt = meta.data[0];
+          ctx.save();
+          ctx.font = '10px Inter, sans-serif';
+          ctx.fillStyle = ds.borderColor;
+          ctx.textAlign = 'center';
+          ctx.fillText(ds.label.replace(' RAG','').replace('Retrieval','Ret.'), pt.x, pt.y - pt.options.radius - 5);
+          ctx.restore();
+        }
+      });
+    }
+  }]
+});
+
+// ── Token cost bar ───────────────────────────────────────────────────────
+const tokenSorted = [...nonTrivial].sort((a,b) => b.tokens - a.tokens);
+new Chart(document.getElementById('tokenChart'), {
+  type: 'bar',
+  data: {
+    labels: tokenSorted.map(p => p.label),
+    datasets: [{
+      data: tokenSorted.map(p => p.tokens),
+      backgroundColor: tokenSorted.map(p =>
+        p.tokens > 1500 ? 'rgba(255,107,107,0.65)' :
+        p.tokens < 850  ? 'rgba(0,212,170,0.65)' :
+        'rgba(108,99,255,0.55)'
+      ),
+      borderColor: tokenSorted.map(p =>
+        p.tokens > 1500 ? '#ff6b6b' :
+        p.tokens < 850  ? '#00d4aa' :
+        '#6c63ff'
+      ),
+      borderWidth: 1.5,
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} tokens / query` } }
+    },
+    scales: {
+      x: { grid: { color: gridColor }, ticks: { maxRotation: 45, font: { size: 10 } } },
+      y: { grid: { color: gridColor },
+           title: { display: true, text: 'Avg Tokens', color: '#7b82a0' } }
+    }
+  }
+});
+
+// ── Results Table ─────────────────────────────────────────────────────────
+let currentSort = 'recall5';
+const SIG_CONFIG = {
+  upper:    { label: 'Upper bound', cls: 'sig-ns' },
+  lower:    { label: 'Lower bound', cls: 'sig-ns' },
+  baseline: { label: 'Baseline',    cls: 'sig-baseline' },
+  better:   { cls: 'sig-better' },
+  worse:    { cls: 'sig-worse' },
+  ns:       { label: 'ns',          cls: 'sig-ns' },
+};
+
+const DOT_COLORS = {};
+PATTERNS.forEach((p, i) => DOT_COLORS[p.id] = COLORS[i % COLORS.length]);
+
+function bar(value, max, color) {
+  const pct = Math.min(100, (value / max) * 100);
+  return `<div class="metric-bar-wrap">
+    <div class="metric-bar-bg">
+      <div class="metric-bar-fill" style="width:${pct}%;background:${color}"></div>
+    </div>
+    <span class="metric-val">${value.toFixed(3)}</span>
+  </div>`;
+}
+
+function sigBadge(p) {
+  if (p.sig === 'baseline') return `<span class="sig-badge sig-baseline">Baseline</span>`;
+  if (p.sig === 'upper')    return `<span class="sig-badge sig-ns">Upper bound</span>`;
+  if (p.sig === 'lower')    return `<span class="sig-badge sig-ns">Lower bound</span>`;
+  const cls = p.sig === 'better' ? 'sig-better' : p.sig === 'worse' ? 'sig-worse' : 'sig-ns';
+  const arrow = p.sig === 'better' ? '▲' : p.sig === 'worse' ? '▼' : '—';
+  const label = p.sig === 'ns' ? 'ns' : `${arrow} ${p.delta} ${p.p}`;
+  return `<span class="sig-badge ${cls}">${label}</span>`;
+}
+
+function renderTable(sortKey) {
+  const sortFns = {
+    recall5:    (a,b) => b.recall5  - a.recall5,
+    recall10:   (a,b) => b.recall10 - a.recall10,
+    precision5: (a,b) => b.prec5    - a.prec5,
+    latency:    (a,b) => a.latency  - b.latency,
+    tokens:     (a,b) => a.tokens   - b.tokens,
+  };
+  const data = [...PATTERNS].sort(sortFns[sortKey]);
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = data.map((p, i) => `
+    <tr>
+      <td style="color:var(--text-dim);font-size:0.75rem">${i + 1}</td>
+      <td class="pattern-cell">
+        <div class="pattern-name">
+          <span class="pattern-dot" style="background:${DOT_COLORS[p.id]}"></span>
+          ${p.label}
+        </div>
+      </td>
+      <td>${bar(p.recall5, 1, '#6c63ff')}</td>
+      <td>${bar(p.recall10, 1, '#00d4aa')}</td>
+      <td>${bar(p.prec5, 0.4, '#ffd166')}</td>
+      <td class="latency-val">${(p.latency/1000).toFixed(1)}s</td>
+      <td class="tokens-val">${p.tokens.toLocaleString()}</td>
+      <td>${sigBadge(p)}</td>
+    </tr>
+  `).join('');
+}
+
+function sortTable(key) {
+  currentSort = key;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderTable(key);
+}
+
+renderTable('recall5');
+</script>
+</body>
+</html>

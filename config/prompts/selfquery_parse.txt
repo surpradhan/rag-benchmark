@@ -1,0 +1,8 @@
+Extract structured metadata filters from the question below.
+Available filter fields: source (document title string), chunk_id (integer).
+Return a JSON object with two keys: "query" (the core question to search) and "filters" (a dict of field->value pairs, or empty dict if no filters apply).
+Only include a filter if the question explicitly references a specific document title or chunk ID.
+
+Question: {question}
+
+Return JSON only, no explanation:

@@ -1,0 +1,5 @@
+Write a short hypothetical passage (3-5 sentences) that would appear in a document containing the answer to the question below. This passage will be used for semantic search — it does not need to be factually verified. Write a plausible, specific passage even if you are uncertain of the exact facts. Do not say "I don't know" or refuse — always write a passage.
+
+Question: {question}
+
+Hypothetical passage:

@@ -1,0 +1,11 @@
+Rate whether the document contains information needed to answer the question.
+
+RELEVANT: document directly contains facts needed to answer the question
+PARTIAL: document contains related context but cannot answer the question alone
+IRRELEVANT: document does not help answer the question (e.g. a distractor on a different topic)
+
+Question: {question}
+
+Document: {document}
+
+Respond with exactly one word (RELEVANT, PARTIAL, or IRRELEVANT):

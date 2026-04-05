@@ -1,0 +1,81 @@
+dataset:
+  name: hotpotqa
+  test_size: 500        # frozen eval set (PRD spec; scale to 2000 for final runs)
+  dev_size: 500
+  seed: 42
+  corpus_path: data/processed/corpus.json
+
+chunking:
+  chunk_size: 512
+  chunk_overlap: 50
+  splitter: recursive_character
+  separators: ["\n\n", "\n", ". ", " ", ""]
+  tokenizer: cl100k_base   # tiktoken tokenizer for accurate token counting
+
+embedding:
+  model: all-MiniLM-L6-v2
+  dimension: 384
+  normalize: true
+
+vector_store:
+  type: faiss
+  index_type: IndexFlatIP   # cosine via L2-normalized inner product
+  persist_dir: ./data/faiss_index
+
+bm25:
+  persist_path: ./data/bm25_index/bm25_index.pkl
+
+llm:
+  provider: ollama           # ollama | together | groq
+  model: llama3.1:8b-instruct-q8_0
+  base_url: http://localhost:11434
+  temperature: 0.0
+  max_tokens: 512
+  seed: 42
+  # Fallback if local GPU insufficient:
+  together:
+    model: meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo
+    api_key: ${TOGETHER_API_KEY}
+
+retrieval:
+  top_k: 5                  # default; patterns may override
+  top_k_values: [5, 10]     # report Recall/Precision at both
+  similarity_metric: cosine
+  rrf_k: 60                 # RRF constant (Hybrid RAG)
+  rerank_initial_k: 20      # initial FAISS candidates before cross-encoder (Re-ranking RAG)
+  cross_encoder_model: cross-encoder/ms-marco-MiniLM-L-6-v2
+  multiquery_n_variants: 3  # number of LLM-generated query variants (Multi-Query RAG)
+  self_query_candidate_k: 50  # broad FAISS fetch before metadata post-filtering (Self-Query RAG)
+  crag_max_retries: 2         # max re-retrieval attempts if relevance < threshold (CRAG)
+  crag_relevance_threshold: 0.5  # fraction of RELEVANT ratings required to skip re-retrieval
+  agentic_max_iterations: 5   # ReAct loop cap (Agentic RAG)
+  agentic_tool_top_k: 3       # docs per tool call in Agentic RAG
+
+parent_child:
+  child_size: 256
+  child_overlap: 25
+  parent_size: 1024
+  parent_overlap: 100
+  persist_dir: ./data/parent_child_index
+
+graph_rag:
+  persist_dir: ./data/graph_rag_index
+  min_edge_weight: 1        # minimum co-mention count to create an edge
+  min_community_size: 2     # discard singleton communities
+  max_communities: 1000     # cap communities indexed in FAISS
+  community_repr_docs: 8    # docs per community for representative embedding text
+  community_repr_chars: 200 # chars per doc in representative text
+  top_communities: 5        # communities retrieved per query
+  broad_k_multiplier: 20    # main FAISS over-fetch factor before community filtering
+
+evaluation:
+  n_runs: 3
+  metrics:
+    - recall_at_k
+    - precision_at_k
+    - faithfulness
+    - answer_relevance
+    - hallucination_rate
+    - latency_ms
+    - token_cost
+  results_dir: ./results/raw
