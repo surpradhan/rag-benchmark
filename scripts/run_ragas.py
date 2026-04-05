@@ -43,8 +43,9 @@ def build_ragas_metrics():
     base_url = cfg["llm"].get("base_url", "http://localhost:11434")
     embed_model = cfg["embedding"].get("model", "all-MiniLM-L6-v2")
 
-    # 120s timeout per LLM call — needed for Llama 8B on complex RAGAS prompts
-    llm = ChatOllama(model=model, base_url=base_url, temperature=0, timeout=120)
+    # 180s timeout per LLM call — must match RunConfig timeout to avoid
+    # RAGAS retrying after the Ollama client has already given up.
+    llm = ChatOllama(model=model, base_url=base_url, temperature=0, timeout=180)
     emb = HuggingFaceEmbeddings(model_name=embed_model)
 
     faithfulness.llm = LangchainLLMWrapper(llm)
@@ -157,10 +158,11 @@ def main():
         if args.limit:
             per_query = per_query[:args.limit]
 
-        # Random sample for speed — seed=42 for reproducibility
+        # Random sample for speed — seed=42 matches the project reproducibility
+        # contract so the same 50 questions are always selected per pattern.
         if args.sample and args.sample > 0 and len(per_query) > args.sample:
             import random
-            random.seed(42)
+            random.seed(42)  # must be set immediately before sample(), not earlier
             per_query = random.sample(per_query, args.sample)
             print(f"  Sampled {args.sample} from {len(data['per_query_metrics'])} queries in {json_path.name}")
         else:

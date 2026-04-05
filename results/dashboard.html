@@ -417,7 +417,7 @@
 <script>
 // ── Data ──────────────────────────────────────────────────────────────────
 const PATTERNS = [
-  { id: 'oracle_rag',       label: 'Oracle RAG',        recall5: 1.000, recall10: 1.000, prec5: 0.400, latency: 2210,  tokens: 178,   faith: 0.135, ansrel: 0.379, sig: 'upper' },
+  { id: 'oracle_rag',       label: 'Oracle RAG',        recall5: 1.000, recall10: 1.000, prec5: 0.400, latency: 2210,  tokens: 178,   faith: 0.135, ansrel: 0.379, sig: 'upper', faithNote: 'Low faithfulness is a RAGAS artifact: gold facts are injected as sparse fragments; the 8B LLM synthesizes beyond them, flagged as hallucination by the judge.' },
   { id: 'reranking_rag',    label: 'Re-ranking RAG',    recall5: 0.706, recall10: 0.732, prec5: 0.284, latency: 7947,  tokens: 858,   faith: 0.725, ansrel: 0.427, sig: 'better', delta: '+15.9%', p: '***' },
   { id: 'hybrid_rag',       label: 'Hybrid RAG',        recall5: 0.651, recall10: 0.745, prec5: 0.262, latency: 6829,  tokens: 864,   faith: 0.693, ansrel: 0.481, sig: 'better', delta: '+6.9%',  p: '***' },
   { id: 'basic_rag',        label: 'Basic RAG',         recall5: 0.609, recall10: 0.684, prec5: 0.245, latency: 6774,  tokens: 833,   faith: 0.571, ansrel: 0.444, sig: 'baseline' },
@@ -699,7 +699,7 @@ function renderTable(sortKey) {
       <td>${bar(p.recall5, 1, '#6c63ff')}</td>
       <td>${bar(p.recall10, 1, '#00d4aa')}</td>
       <td>${bar(p.prec5, 0.4, '#ffd166')}</td>
-      <td>${bar(p.faith, 1, '#4cc9f0')}</td>
+      <td>${p.faithNote ? `<span title="${p.faithNote}" style="cursor:help">${bar(p.faith, 1, '#4cc9f0')}</span><span title="${p.faithNote}" style="cursor:help;font-size:0.7rem;color:var(--text-muted);margin-left:4px">ⓘ</span>` : bar(p.faith, 1, '#4cc9f0')}</td>
       <td>${bar(p.ansrel, 1, '#f72585')}</td>
       <td class="latency-val">${(p.latency/1000).toFixed(1)}s</td>
       <td class="tokens-val">${p.tokens.toLocaleString()}</td>

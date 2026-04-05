@@ -8,7 +8,7 @@
 
 We present a controlled benchmark comparing **10 Retrieval-Augmented Generation (RAG) architectures** plus two baselines (zero-retrieval and oracle) on the HotpotQA distractor dev set. All patterns share an identical stack — same embedding model, vector store, LLM, chunking parameters, and evaluation dataset. The only variable is the retrieval strategy. We evaluate across seven dimensions: Recall@5, Recall@10, Precision@5, Precision@10, Faithfulness, Answer Relevance, and latency/token cost. Statistical significance is established via Wilcoxon signed-rank tests with Cohen's d effect sizes.
 
-**Key findings:** Re-ranking RAG achieves the best Recall@5 (0.706, +15.9% over Basic RAG, p<0.001, d=0.32). Hybrid RAG wins Recall@10 (0.745, +8.9%, p<0.001). Most "advanced" patterns — Multi-query, HyDE, Parent-Child, Corrective RAG — show no statistically meaningful retrieval gain over Basic RAG despite 1.5–2.5× the latency. Agentic RAG and Graph RAG actively underperform. Faithfulness is uniformly high (>0.90) across all patterns; Answer Relevance is the discriminating generation quality metric.
+**Key findings:** Re-ranking RAG achieves the best Recall@5 (0.706, +15.9% over Basic RAG, p<0.001, d=0.32) and Faithfulness (0.725). Hybrid RAG wins Recall@10 (0.745, +8.9%, p<0.001) and Answer Relevance (0.481). Most "advanced" patterns — Multi-query, HyDE, Parent-Child, Corrective RAG — show no statistically meaningful retrieval gain over Basic RAG despite 1.5–2.5× the latency. Agentic RAG and Graph RAG actively underperform on retrieval. Faithfulness ranges from 0.135 (Oracle) to 0.725 (Re-ranking) and correlates strongly with retrieval quality — better retrieval yields more grounded answers.
 
 ---
 

@@ -8,19 +8,20 @@ cd "$(dirname "$0")/.."
 echo "============================================================"
 echo "Step 1: Re-aggregate results (includes RAGAS scores)"
 echo "============================================================"
-python3.11 scripts/aggregate_results.py --input results/raw/ --output results/aggregated/
+PYTHON=${PYTHON:-/opt/anaconda3/bin/python3.11}
+$PYTHON scripts/aggregate_results.py --input results/raw/ --output results/aggregated/
 echo ""
 
 echo "============================================================"
 echo "Step 2: Regenerate all 8 charts"
 echo "============================================================"
-python3.11 scripts/generate_charts.py --input results/aggregated/ --output results/charts/
+$PYTHON scripts/generate_charts.py --input results/aggregated/ --output results/charts/
 echo ""
 
 echo "============================================================"
 echo "Step 3: Inject RAGAS scores into dashboard HTML"
 echo "============================================================"
-python3.11 - <<'PYEOF'
+$PYTHON - <<'PYEOF'
 import json, csv, math, re
 from pathlib import Path
 
