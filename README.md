@@ -42,29 +42,19 @@ Evaluated on **500 questions** from HotpotQA distractor dev set, 3 runs each (`s
 
 ## Charts
 
-### Overall Dashboard
-![Overall Dashboard](results/charts/1_overall_dashboard.png)
+### % Improvement over Basic RAG Baseline
+![Improvement over Baseline](results/charts/7_improvement_over_baseline.png)
 
-### Accuracy vs. Token Cost
-![Accuracy vs Cost](results/charts/2_accuracy_vs_cost.png)
-
-### Accuracy vs. Latency
-![Accuracy vs Latency](results/charts/3_accuracy_vs_latency.png)
-
-### Latency Distribution
+### Latency Distribution per Pattern
 ![Latency Distribution](results/charts/5_latency_distribution.png)
+
+### Recall@5 by Question Type
+![Error Heatmap](results/charts/8_error_heatmap.png)
 
 ### Recall@K Curves
 ![Recall@K Curves](results/charts/4_recall_at_k.png)
 
-### Improvement over Basic RAG Baseline
-![Improvement over Baseline](results/charts/7_improvement_over_baseline.png)
-
-### Multi-Dimensional Comparison (Top 5 Patterns)
-![Radar Chart](results/charts/6_radar.png)
-
-### Recall@5 by Question Type
-![Error Heatmap](results/charts/8_error_heatmap.png)
+> Charts for Accuracy vs. Cost, Accuracy vs. Latency, and Radar comparison will be added after RAGAS metrics (Faithfulness, Answer Relevance) are collected.
 
 ---
 
