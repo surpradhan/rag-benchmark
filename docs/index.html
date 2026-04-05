@@ -442,7 +442,7 @@ footer {
       <thead>
         <tr>
           <th>#</th><th>Pattern</th><th>Recall@5</th><th>Recall@10</th>
-          <th>Precision@5</th><th>p50 Latency</th><th>Avg Tokens</th><th>vs Baseline</th>
+          <th>Precision@5</th><th>Faithfulness</th><th>Ans. Relevance</th><th>p50 Latency</th><th>Avg Tokens</th><th>vs Baseline</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -520,18 +520,18 @@ footer {
 <script>
 // ── Data ─────────────────────────────────────────────────────────────────
 const DATA = [
-  { id:'oracle_rag',       label:'Oracle RAG',       pid:'B2', desc:'Gold supporting facts injected directly — upper bound.',             recall5:1.000, recall10:1.000, prec5:0.400, lat:2210,  tok:178,  sig:'bound',  delta:null },
-  { id:'reranking_rag',    label:'Re-ranking RAG',   pid:'P3', desc:'FAISS top-20 → cross-encoder reranker → top-5.',                    recall5:0.706, recall10:0.732, prec5:0.284, lat:7947,  tok:858,  sig:'up',    delta:'+15.9%' },
-  { id:'hybrid_rag',       label:'Hybrid RAG',       pid:'P2', desc:'BM25 + vector retrieval fused with Reciprocal Rank Fusion.',        recall5:0.651, recall10:0.745, prec5:0.262, lat:6829,  tok:864,  sig:'up',    delta:'+6.9%' },
-  { id:'basic_rag',        label:'Basic RAG',        pid:'B1', desc:'Standard FAISS vector similarity retrieval — primary baseline.',    recall5:0.609, recall10:0.684, prec5:0.245, lat:6774,  tok:833,  sig:'base',  delta:null },
-  { id:'multiquery_rag',   label:'Multi-query RAG',  pid:'P4', desc:'LLM generates 3 query variants, results are merged.',              recall5:0.607, recall10:0.685, prec5:0.244, lat:10000, tok:952,  sig:'ns',    delta:'−0.3%' },
-  { id:'parent_child_rag', label:'Parent-Child RAG', pid:'P6', desc:'Retrieve child chunks (256 tok), return parent context (1024 tok).', recall5:0.605, recall10:0.679, prec5:0.243, lat:6707,  tok:913,  sig:'down',  delta:'−0.7%' },
-  { id:'corrective_rag',   label:'Corrective RAG',   pid:'P8', desc:'Re-retrieves if <50% of chunks are rated RELEVANT.',               recall5:0.604, recall10:0.681, prec5:0.243, lat:15596, tok:2415, sig:'down',  delta:'−0.8%' },
-  { id:'hyde_rag',         label:'HyDE',             pid:'P5', desc:'LLM generates a hypothetical document → embed → search.',          recall5:0.602, recall10:0.679, prec5:0.242, lat:14046, tok:1039, sig:'ns',    delta:'−1.1%' },
-  { id:'self_query_rag',   label:'Self-Query RAG',   pid:'P7', desc:'LLM extracts metadata filters from the natural language query.',   recall5:0.579, recall10:0.645, prec5:0.233, lat:8763,  tok:900,  sig:'down',  delta:'−4.9%' },
-  { id:'agentic_rag',      label:'Agentic RAG',      pid:'P9', desc:'ReAct loop with search, lookup, answer tools (max 5 iterations).',  recall5:0.498, recall10:0.508, prec5:0.200, lat:12206, tok:858,  sig:'down',  delta:'−18.2%' },
-  { id:'graph_rag',        label:'Graph RAG',        pid:'P10',desc:'Entity extraction → knowledge graph → community summaries.',       recall5:0.348, recall10:0.559, prec5:0.140, lat:5964,  tok:786,  sig:'down',  delta:'−42.9%' },
-  { id:'zero_retrieval',   label:'Zero Retrieval',   pid:'B0', desc:'LLM parametric knowledge only, no retrieval — lower bound.',       recall5:0.000, recall10:0.000, prec5:0.000, lat:568,   tok:36,   sig:'bound',  delta:null },
+  { id:'oracle_rag',       label:'Oracle RAG',       pid:'B2', desc:'Gold supporting facts injected directly — upper bound.',             recall5:1.000, recall10:1.000, prec5:0.400, lat:2210,  tok:178,  faith:0.135, ansrel:0.379, sig:'bound',  delta:null },
+  { id:'reranking_rag',    label:'Re-ranking RAG',   pid:'P3', desc:'FAISS top-20 → cross-encoder reranker → top-5.',                    recall5:0.706, recall10:0.732, prec5:0.284, lat:7947,  tok:858,  faith:0.725, ansrel:0.427, sig:'up',    delta:'+15.9%' },
+  { id:'hybrid_rag',       label:'Hybrid RAG',       pid:'P2', desc:'BM25 + vector retrieval fused with Reciprocal Rank Fusion.',        recall5:0.651, recall10:0.745, prec5:0.262, lat:6829,  tok:864,  faith:0.693, ansrel:0.481, sig:'up',    delta:'+6.9%' },
+  { id:'basic_rag',        label:'Basic RAG',        pid:'B1', desc:'Standard FAISS vector similarity retrieval — primary baseline.',    recall5:0.609, recall10:0.684, prec5:0.245, lat:6774,  tok:833,  faith:0.571, ansrel:0.444, sig:'base',  delta:null },
+  { id:'multiquery_rag',   label:'Multi-query RAG',  pid:'P4', desc:'LLM generates 3 query variants, results are merged.',              recall5:0.607, recall10:0.685, prec5:0.244, lat:10000, tok:952,  faith:0.647, ansrel:0.429, sig:'ns',    delta:'−0.3%' },
+  { id:'parent_child_rag', label:'Parent-Child RAG', pid:'P6', desc:'Retrieve child chunks (256 tok), return parent context (1024 tok).', recall5:0.605, recall10:0.679, prec5:0.243, lat:6707,  tok:913,  faith:0.632, ansrel:0.395, sig:'down',  delta:'−0.7%' },
+  { id:'corrective_rag',   label:'Corrective RAG',   pid:'P8', desc:'Re-retrieves if <50% of chunks are rated RELEVANT.',               recall5:0.604, recall10:0.681, prec5:0.243, lat:15596, tok:2415, faith:0.572, ansrel:0.485, sig:'down',  delta:'−0.8%' },
+  { id:'hyde_rag',         label:'HyDE',             pid:'P5', desc:'LLM generates a hypothetical document → embed → search.',          recall5:0.602, recall10:0.679, prec5:0.242, lat:14046, tok:1039, faith:0.623, ansrel:0.407, sig:'ns',    delta:'−1.1%' },
+  { id:'self_query_rag',   label:'Self-Query RAG',   pid:'P7', desc:'LLM extracts metadata filters from the natural language query.',   recall5:0.579, recall10:0.645, prec5:0.233, lat:8763,  tok:900,  faith:0.600, ansrel:0.439, sig:'down',  delta:'−4.9%' },
+  { id:'agentic_rag',      label:'Agentic RAG',      pid:'P9', desc:'ReAct loop with search, lookup, answer tools (max 5 iterations).',  recall5:0.498, recall10:0.508, prec5:0.200, lat:12206, tok:858,  faith:0.541, ansrel:0.480, sig:'down',  delta:'−18.2%' },
+  { id:'graph_rag',        label:'Graph RAG',        pid:'P10',desc:'Entity extraction → knowledge graph → community summaries.',       recall5:0.348, recall10:0.559, prec5:0.140, lat:5964,  tok:786,  faith:0.557, ansrel:0.451, sig:'down',  delta:'−42.9%' },
+  { id:'zero_retrieval',   label:'Zero Retrieval',   pid:'B0', desc:'LLM parametric knowledge only, no retrieval — lower bound.',       recall5:0.000, recall10:0.000, prec5:0.000, lat:568,   tok:36,   faith:0.370, ansrel:0.034, sig:'bound',  delta:null },
 ];
 
 const COLORS = ['#7c6ffd','#00d9b4','#ffc35a','#ff5e7a','#4cc9f0','#f72585',
@@ -650,6 +650,10 @@ DATA.forEach((d,i) => {
     <td>${bar(d.recall5,1,'#7c6ffd')}</td>
     <td>${bar(d.recall10,1,'#00d9b4')}</td>
     <td>${bar(d.prec5,0.4,'#ffc35a')}</td>
+    <td><span title="${d.id==='oracle_rag' ? 'RAGAS artifact: gold facts are sparse fragments; LLM synthesizes beyond them, flagged as hallucination' : ''}" style="${d.id==='oracle_rag'?'cursor:help':''}">
+      ${bar(d.faith,1,'#4cc9f0')}${d.id==='oracle_rag'?'<span style="font-size:0.75rem;margin-left:4px">ⓘ</span>':''}
+    </span></td>
+    <td>${bar(d.ansrel,1,'#f72585')}</td>
     <td class="muted">${(d.lat/1000).toFixed(1)}s</td>
     <td class="muted">${d.tok.toLocaleString()}</td>
     <td>${badge(d)}</td>`;
