@@ -380,6 +380,8 @@
           <button class="sort-btn active" onclick="sortTable('recall5')">Recall@5</button>
           <button class="sort-btn" onclick="sortTable('recall10')">Recall@10</button>
           <button class="sort-btn" onclick="sortTable('precision5')">Precision@5</button>
+          <button class="sort-btn" onclick="sortTable('faith')">Faithfulness</button>
+          <button class="sort-btn" onclick="sortTable('ansrel')">Ans. Relevance</button>
           <button class="sort-btn" onclick="sortTable('latency')">Latency</button>
           <button class="sort-btn" onclick="sortTable('tokens')">Tokens</button>
         </div>
@@ -393,6 +395,8 @@
               <th>Recall@5</th>
               <th>Recall@10</th>
               <th>Precision@5</th>
+              <th>Faithfulness</th>
+              <th>Ans. Relevance</th>
               <th>p50 Latency</th>
               <th>Avg Tokens</th>
               <th>vs Baseline</th>
@@ -413,18 +417,18 @@
 <script>
 // ── Data ──────────────────────────────────────────────────────────────────
 const PATTERNS = [
-  { id: 'oracle_rag',       label: 'Oracle RAG',        recall5: 1.000, recall10: 1.000, prec5: 0.400, latency: 2210,  tokens: 178,   sig: 'upper' },
-  { id: 'reranking_rag',    label: 'Re-ranking RAG',    recall5: 0.706, recall10: 0.732, prec5: 0.284, latency: 7947,  tokens: 858,   sig: 'better', delta: '+15.9%', p: '***' },
-  { id: 'hybrid_rag',       label: 'Hybrid RAG',        recall5: 0.651, recall10: 0.745, prec5: 0.262, latency: 6829,  tokens: 864,   sig: 'better', delta: '+6.9%',  p: '***' },
-  { id: 'basic_rag',        label: 'Basic RAG',         recall5: 0.609, recall10: 0.684, prec5: 0.245, latency: 6774,  tokens: 833,   sig: 'baseline' },
-  { id: 'multiquery_rag',   label: 'Multi-query RAG',   recall5: 0.607, recall10: 0.685, prec5: 0.244, latency: 10000, tokens: 952,   sig: 'ns',     delta: '−0.3%',  p: 'ns' },
-  { id: 'parent_child_rag', label: 'Parent-Child RAG',  recall5: 0.605, recall10: 0.679, prec5: 0.243, latency: 6707,  tokens: 913,   sig: 'worse',  delta: '−0.7%',  p: '**' },
-  { id: 'corrective_rag',   label: 'Corrective RAG',    recall5: 0.604, recall10: 0.681, prec5: 0.243, latency: 15596, tokens: 2415,  sig: 'worse',  delta: '−0.8%',  p: '**' },
-  { id: 'hyde_rag',         label: 'HyDE',              recall5: 0.602, recall10: 0.679, prec5: 0.242, latency: 14046, tokens: 1039,  sig: 'ns',     delta: '−1.1%',  p: 'ns' },
-  { id: 'self_query_rag',   label: 'Self-Query RAG',    recall5: 0.579, recall10: 0.645, prec5: 0.233, latency: 8763,  tokens: 900,   sig: 'worse',  delta: '−4.9%',  p: '***' },
-  { id: 'agentic_rag',      label: 'Agentic RAG',       recall5: 0.498, recall10: 0.508, prec5: 0.200, latency: 12206, tokens: 858,   sig: 'worse',  delta: '−18.2%', p: '***' },
-  { id: 'graph_rag',        label: 'Graph RAG',         recall5: 0.348, recall10: 0.559, prec5: 0.140, latency: 5964,  tokens: 786,   sig: 'worse',  delta: '−42.9%', p: '***' },
-  { id: 'zero_retrieval',   label: 'Zero Retrieval',    recall5: 0.000, recall10: 0.000, prec5: 0.000, latency: 568,   tokens: 36,    sig: 'lower' },
+  { id: 'oracle_rag',       label: 'Oracle RAG',        recall5: 1.000, recall10: 1.000, prec5: 0.400, latency: 2210,  tokens: 178,   faith: 0.135, ansrel: 0.379, sig: 'upper', faithNote: 'Low faithfulness is a RAGAS artifact: gold facts are injected as sparse fragments; the 8B LLM synthesizes beyond them, flagged as hallucination by the judge.' },
+  { id: 'reranking_rag',    label: 'Re-ranking RAG',    recall5: 0.706, recall10: 0.732, prec5: 0.284, latency: 7947,  tokens: 858,   faith: 0.725, ansrel: 0.427, sig: 'better', delta: '+15.9%', p: '***' },
+  { id: 'hybrid_rag',       label: 'Hybrid RAG',        recall5: 0.651, recall10: 0.745, prec5: 0.262, latency: 6829,  tokens: 864,   faith: 0.693, ansrel: 0.481, sig: 'better', delta: '+6.9%',  p: '***' },
+  { id: 'basic_rag',        label: 'Basic RAG',         recall5: 0.609, recall10: 0.684, prec5: 0.245, latency: 6774,  tokens: 833,   faith: 0.571, ansrel: 0.444, sig: 'baseline' },
+  { id: 'multiquery_rag',   label: 'Multi-query RAG',   recall5: 0.607, recall10: 0.685, prec5: 0.244, latency: 10000, tokens: 952,   faith: 0.647, ansrel: 0.429, sig: 'ns',     delta: '−0.3%',  p: 'ns' },
+  { id: 'parent_child_rag', label: 'Parent-Child RAG',  recall5: 0.605, recall10: 0.679, prec5: 0.243, latency: 6707,  tokens: 913,   faith: 0.632, ansrel: 0.395, sig: 'worse',  delta: '−0.7%',  p: '**' },
+  { id: 'corrective_rag',   label: 'Corrective RAG',    recall5: 0.604, recall10: 0.681, prec5: 0.243, latency: 15596, tokens: 2415,  faith: 0.572, ansrel: 0.485, sig: 'worse',  delta: '−0.8%',  p: '**' },
+  { id: 'hyde_rag',         label: 'HyDE',              recall5: 0.602, recall10: 0.679, prec5: 0.242, latency: 14046, tokens: 1039,  faith: 0.623, ansrel: 0.407, sig: 'ns',     delta: '−1.1%',  p: 'ns' },
+  { id: 'self_query_rag',   label: 'Self-Query RAG',    recall5: 0.579, recall10: 0.645, prec5: 0.233, latency: 8763,  tokens: 900,   faith: 0.600, ansrel: 0.439, sig: 'worse',  delta: '−4.9%',  p: '***' },
+  { id: 'agentic_rag',      label: 'Agentic RAG',       recall5: 0.498, recall10: 0.508, prec5: 0.200, latency: 12206, tokens: 858,   faith: 0.541, ansrel: 0.480, sig: 'worse',  delta: '−18.2%', p: '***' },
+  { id: 'graph_rag',        label: 'Graph RAG',         recall5: 0.348, recall10: 0.559, prec5: 0.140, latency: 5964,  tokens: 786,   faith: 0.557, ansrel: 0.451, sig: 'worse',  delta: '−42.9%', p: '***' },
+  { id: 'zero_retrieval',   label: 'Zero Retrieval',    recall5: 0.000, recall10: 0.000, prec5: 0.000, latency: 568,   tokens: 36,    faith: 0.370, ansrel: 0.034, sig: 'lower' },
 ];
 
 const COLORS = [
@@ -676,6 +680,8 @@ function renderTable(sortKey) {
     recall5:    (a,b) => b.recall5  - a.recall5,
     recall10:   (a,b) => b.recall10 - a.recall10,
     precision5: (a,b) => b.prec5    - a.prec5,
+    faith:      (a,b) => b.faith    - a.faith,
+    ansrel:     (a,b) => b.ansrel   - a.ansrel,
     latency:    (a,b) => a.latency  - b.latency,
     tokens:     (a,b) => a.tokens   - b.tokens,
   };
@@ -693,6 +699,8 @@ function renderTable(sortKey) {
       <td>${bar(p.recall5, 1, '#6c63ff')}</td>
       <td>${bar(p.recall10, 1, '#00d4aa')}</td>
       <td>${bar(p.prec5, 0.4, '#ffd166')}</td>
+      <td>${p.faithNote ? `<span title="${p.faithNote}" style="cursor:help">${bar(p.faith, 1, '#4cc9f0')}</span><span title="${p.faithNote}" style="cursor:help;font-size:0.7rem;color:var(--text-muted);margin-left:4px">ⓘ</span>` : bar(p.faith, 1, '#4cc9f0')}</td>
+      <td>${bar(p.ansrel, 1, '#f72585')}</td>
       <td class="latency-val">${(p.latency/1000).toFixed(1)}s</td>
       <td class="tokens-val">${p.tokens.toLocaleString()}</td>
       <td>${sigBadge(p)}</td>

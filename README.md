@@ -6,12 +6,12 @@ A reproducible, open-source benchmark comparing **10 RAG architectures + 2 basel
 
 ## Key Findings
 
-- **Re-ranking RAG** achieves the best Recall@5 (0.706) among real patterns — cross-encoder reranking consistently surfaces the right documents
-- **Hybrid RAG** (BM25 + vector + RRF) wins on Recall@10 (0.745) with near-identical latency to Basic RAG
-- **HyDE** is competitive on retrieval (Recall@5 0.602) but costs 2× the latency — the hypothesis generation step adds ~7s p50 vs. Basic RAG
-- **Corrective RAG** adds significant token cost (3× tokens) with no meaningful retrieval gain over Basic RAG on this dataset
-- **Agentic RAG** underperforms Basic RAG on retrieval metrics — the ReAct loop's iterative search does not compensate for its higher latency on straightforward multi-hop questions
-- **Graph RAG** has the weakest Recall@5 (0.348) but highest Recall@10 gap (+0.211), suggesting it retrieves broadly but not precisely
+- **Re-ranking RAG** achieves the best Recall@5 (0.706, +15.9% vs. Basic RAG, p<0.001) and highest Faithfulness (0.725) — the only pattern with a statistically meaningful retrieval improvement
+- **Hybrid RAG** (BM25 + vector + RRF) wins Recall@10 (0.745) and Answer Relevance (0.481) with near-identical latency to Basic RAG — the best default starting point
+- **Multi-query, HyDE, Parent-Child, Corrective RAG** show no statistically meaningful retrieval gain over Basic RAG despite 1.5–2.9× the latency/tokens
+- **Agentic RAG** underperforms Basic RAG on retrieval (−18.2%, p<0.001) — the ReAct loop compounds retrieval errors at 8B model scale
+- **Graph RAG** has the weakest Recall@5 (0.348) — designed for dataset-level synthesis, not factoid retrieval
+- **Faithfulness** is discriminated by retrieval quality: Re-ranking (0.725) > Hybrid (0.693) > Basic (0.571), confirming better retrieval → more faithful answers
 
 ---
 
@@ -21,22 +21,22 @@ A reproducible, open-source benchmark comparing **10 RAG architectures + 2 basel
 
 Evaluated on **500 questions** from HotpotQA distractor dev set, 3 runs each (`seed=42`, `temperature=0`).
 
-| Pattern | Recall@5 | Recall@10 | Precision@5 | p50 Latency | Avg Tokens |
-|---|---|---|---|---|---|
-| Oracle *(upper bound)* | **1.000** | **1.000** | **0.400** | 2,210 ms | 178 |
-| Re-ranking RAG | **0.706** | 0.732 | **0.284** | 7,947 ms | 858 |
-| Hybrid RAG | 0.651 | **0.745** | 0.262 | 6,829 ms | 864 |
-| Basic RAG | 0.609 | 0.684 | 0.245 | 6,774 ms | 833 |
-| HyDE | 0.602 | 0.679 | 0.242 | 14,046 ms | 1,039 |
-| Multi-query RAG | 0.607 | 0.685 | 0.244 | 10,000 ms | 952 |
-| Parent-Child RAG | 0.605 | 0.679 | 0.243 | 6,707 ms | 913 |
-| Corrective RAG | 0.604 | 0.681 | 0.243 | 15,596 ms | 2,415 |
-| Self-Query RAG | 0.579 | 0.645 | 0.233 | 8,763 ms | 900 |
-| Agentic RAG | 0.498 | 0.508 | 0.200 | 12,206 ms | 858 |
-| Graph RAG | 0.348 | 0.559 | 0.140 | 5,964 ms | 786 |
-| Zero-retrieval *(lower bound)* | 0.000 | 0.000 | 0.000 | 568 ms | 36 |
+| Pattern | Recall@5 | Recall@10 | Precision@5 | Faithfulness | Ans. Relevance | p50 Latency |
+|---|---|---|---|---|---|---|
+| Oracle *(upper bound)* | **1.000** | **1.000** | **0.400** | 0.135 | 0.379 | 2,210 ms |
+| Re-ranking RAG | **0.706** | 0.732 | **0.284** | **0.725** | 0.427 | 7,947 ms |
+| Hybrid RAG | 0.651 | **0.745** | 0.262 | 0.693 | **0.481** | 6,829 ms |
+| Basic RAG | 0.609 | 0.684 | 0.245 | 0.571 | 0.444 | 6,774 ms |
+| Multi-query RAG | 0.607 | 0.685 | 0.244 | 0.647 | 0.429 | 10,000 ms |
+| HyDE | 0.602 | 0.679 | 0.242 | 0.623 | 0.407 | 14,046 ms |
+| Parent-Child RAG | 0.605 | 0.679 | 0.243 | 0.632 | 0.395 | 6,707 ms |
+| Corrective RAG | 0.604 | 0.681 | 0.243 | 0.572 | **0.485** | 15,596 ms |
+| Self-Query RAG | 0.579 | 0.645 | 0.233 | 0.600 | 0.439 | 8,763 ms |
+| Agentic RAG | 0.498 | 0.508 | 0.200 | 0.541 | 0.480 | 12,206 ms |
+| Graph RAG | 0.348 | 0.559 | 0.140 | 0.557 | 0.451 | 5,964 ms |
+| Zero-retrieval *(lower bound)* | 0.000 | 0.000 | 0.000 | 0.370 | 0.034 | 568 ms |
 
-> Faithfulness, Answer Relevance, and Hallucination Rate (via RAGAS) — in progress.
+*Faithfulness and Answer Relevance via RAGAS (50-question sample per pattern, Llama 3.1 8B judge).*
 
 ---
 
@@ -45,16 +45,20 @@ Evaluated on **500 questions** from HotpotQA distractor dev set, 3 runs each (`s
 ### % Improvement over Basic RAG Baseline
 ![Improvement over Baseline](results/charts/7_improvement_over_baseline.png)
 
+### Accuracy vs. Latency
+![Accuracy vs Latency](results/charts/3_accuracy_vs_latency.png)
+
+### Radar: Top-5 Patterns
+![Radar Chart](results/charts/6_radar.png)
+
+### Recall@K Curves
+![Recall@K Curves](results/charts/4_recall_at_k.png)
+
 ### Latency Distribution per Pattern
 ![Latency Distribution](results/charts/5_latency_distribution.png)
 
 ### Recall@5 by Question Type
 ![Error Heatmap](results/charts/8_error_heatmap.png)
-
-### Recall@K Curves
-![Recall@K Curves](results/charts/4_recall_at_k.png)
-
-> Charts for Accuracy vs. Cost, Accuracy vs. Latency, and Radar comparison will be added after RAGAS metrics (Faithfulness, Answer Relevance) are collected.
 
 ---
 
