@@ -73,6 +73,7 @@ tree_rag:
   bm25_candidate_k: 15        # articles shortlisted by BM25 before LLM selection
   article_select_k: 5         # articles the LLM picks from the BM25 shortlist
   max_nodes_per_article: 3    # paragraph nodes the LLM selects per article
+  summary_max_chars: 150      # max chars for extractive paragraph summary in tree index
   # Note: total LLM calls per query = 1 (article selection) + article_select_k (node navigation) + 1 (generation)
   # At defaults: 7 LLM calls per query — expect ~3-5x higher token cost vs. Basic RAG
 

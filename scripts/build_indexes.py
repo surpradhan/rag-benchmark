@@ -55,6 +55,7 @@ def main(config_path: str = "config/config.yaml", force: bool = False) -> None:
         corpus_path=str(CORPUS_PATH),
         persist_dir=tree_cfg.get("persist_dir", "./data/tree_index"),
         force=force,
+        summary_max_chars=tree_cfg.get("summary_max_chars", 150),
     )
 
     print("\nAll indexes built successfully.")

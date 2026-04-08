@@ -40,7 +40,7 @@ def _load_prompt(name: str) -> str:
 # Tree index building and persistence
 # ---------------------------------------------------------------------------
 
-def build_article_tree(article: dict) -> dict:
+def build_article_tree(article: dict, summary_max_chars: int = 150) -> dict:
     """
     Convert a HotpotQA corpus article into a two-level JSON tree.
 
@@ -77,8 +77,8 @@ def build_article_tree(article: dict) -> dict:
             continue
 
         first_sent = sentences[0] if sentences else text
-        summary = first_sent[:150].rstrip()
-        if len(first_sent) > 150:
+        summary = first_sent[:summary_max_chars].rstrip()
+        if len(first_sent) > summary_max_chars:
             summary += "..."
 
         nodes.append({
@@ -98,7 +98,7 @@ def build_article_tree(article: dict) -> dict:
     }
 
 
-def build_tree_index(corpus_path: str, persist_dir: str, force: bool = False) -> dict[str, dict]:
+def build_tree_index(corpus_path: str, persist_dir: str, force: bool = False, summary_max_chars: int = 150) -> dict[str, dict]:
     """
     Build and persist a tree index for every article in the corpus JSON.
 
@@ -147,7 +147,7 @@ def build_tree_index(corpus_path: str, persist_dir: str, force: bool = False) ->
 
     trees: dict[str, dict] = {}
     for article in articles:
-        tree = build_article_tree(article)
+        tree = build_article_tree(article, summary_max_chars=summary_max_chars)
         trees[tree["doc_id"]] = tree
 
     Path(persist_dir).mkdir(parents=True, exist_ok=True)
