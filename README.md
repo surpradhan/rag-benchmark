@@ -1,6 +1,6 @@
 # RAG Architecture Benchmark
 
-A reproducible, open-source benchmark comparing **10 RAG architectures + 2 baselines** on the same dataset, embedding model, and LLM. The only variable that changes between runs is the retrieval strategy.
+A reproducible, open-source benchmark comparing **11 RAG architectures + 2 baselines** on the same dataset, embedding model, and LLM. The only variable that changes between runs is the retrieval strategy.
 
 ---
 
@@ -10,6 +10,7 @@ A reproducible, open-source benchmark comparing **10 RAG architectures + 2 basel
 - **Hybrid RAG** (BM25 + vector + RRF) wins Recall@10 (0.745) and Answer Relevance (0.481) with near-identical latency to Basic RAG — the best default starting point
 - **Multi-query, HyDE, Parent-Child, Corrective RAG** show no statistically meaningful retrieval gain over Basic RAG despite 1.5–2.9× the latency/tokens
 - **Agentic RAG** underperforms Basic RAG on retrieval (−18.2%, p<0.001) — the ReAct loop compounds retrieval errors at 8B model scale
+- **Tree RAG** (vectorless, PageIndex-inspired) achieves Recall@5=0.562 (−7.7%) with a 47.8s p50 latency — 7× slower than Basic RAG; the multi-LLM-call pipeline is poorly suited to short-paragraph corpora
 - **Graph RAG** has the weakest Recall@5 (0.348) — designed for dataset-level synthesis, not factoid retrieval
 - **Faithfulness** is discriminated by retrieval quality: Re-ranking (0.725) > Hybrid (0.693) > Basic (0.571), confirming better retrieval → more faithful answers
 
@@ -17,7 +18,7 @@ A reproducible, open-source benchmark comparing **10 RAG architectures + 2 basel
 
 ## Results
 
-> 📊 **[Interactive Dashboard](results/dashboard.html)** — sortable table, charts, and significance badges for all 12 patterns.
+> 📊 **[Interactive Dashboard](results/dashboard.html)** — sortable table, charts, and significance badges for all 13 patterns.
 
 Evaluated on **500 questions** from HotpotQA distractor dev set, 3 runs each (`seed=42`, `temperature=0`).
 
@@ -33,6 +34,7 @@ Evaluated on **500 questions** from HotpotQA distractor dev set, 3 runs each (`s
 | Corrective RAG | 0.604 | 0.681 | 0.243 | 0.572 | **0.485** | 15,596 ms |
 | Self-Query RAG | 0.579 | 0.645 | 0.233 | 0.600 | 0.439 | 8,763 ms |
 | Agentic RAG | 0.498 | 0.508 | 0.200 | 0.541 | 0.480 | 12,206 ms |
+| Tree RAG | 0.562 | 0.562 | 0.226 | 0.567 | 0.317 | 47,818 ms |
 | Graph RAG | 0.348 | 0.559 | 0.140 | 0.557 | 0.451 | 5,964 ms |
 | Zero-retrieval *(lower bound)* | 0.000 | 0.000 | 0.000 | 0.370 | 0.034 | 568 ms |
 
@@ -95,6 +97,7 @@ Every run uses identical values for all variables except the retrieval strategy:
 | P8 | Corrective RAG | Re-retrieves if <50% of chunks rated RELEVANT (up to 2 attempts) |
 | P9 | Agentic RAG | ReAct loop with `search`, `lookup`, `answer` tools (max 5 iterations) |
 | P10 | Graph RAG | Entity extraction → knowledge graph → community summaries |
+| P11 | Tree RAG | BM25 shortlist (15) → LLM article selection (top 5) → LLM node navigation (top 3 paragraphs/article) — no embeddings at query time |
 
 ---
 
@@ -138,6 +141,7 @@ data/
   processed/      # test_questions.json, dev_questions.json (version-controlled)
   raw/            # original downloads (gitignored)
   faiss_index/    # FAISS vector store (gitignored, rebuilt by build_indexes.py)
+  tree_index/     # Tree RAG JSON index (gitignored, rebuilt by build_indexes.py)
 rag_patterns/     # one file per RAG pattern, all implementing BaseRAG
 evaluation/       # metrics.py, run_eval.py, logger.py
 results/
@@ -152,7 +156,7 @@ report/           # research report and blog draft
 ## Reproducing the Results
 
 ```bash
-# Run all 12 patterns × 3 runs
+# Run all 13 patterns × 3 runs
 bash scripts/run_all.sh
 
 # Or run a specific pattern
