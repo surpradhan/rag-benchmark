@@ -117,6 +117,7 @@ PATTERNS = [
     "zero_retrieval", "basic_rag", "oracle_rag", "hybrid_rag",
     "reranking_rag", "multiquery_rag", "hyde_rag", "parent_child_rag",
     "self_query_rag", "corrective_rag", "agentic_rag", "graph_rag",
+    "tree_rag",
 ]
 
 

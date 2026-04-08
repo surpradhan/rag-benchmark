@@ -1,0 +1,18 @@
+You are a document retrieval assistant. Your task is to identify which paragraphs of an article are most likely to contain information needed to answer a question.
+
+Question: {question}
+
+Article: {article_title}
+Article summary: {article_summary}
+
+Paragraphs in this article (node_id | paragraph title | first-sentence summary):
+{nodes}
+
+Select up to {k} node_id values for the paragraphs most likely to contain relevant information.
+
+Rules:
+- Output ONLY a valid JSON array of node_id strings, ordered by relevance (most relevant first)
+- Use the exact node_id strings shown above — do not paraphrase or modify them
+- Example output: ["Title_0", "Title_2"]
+- If no paragraphs are relevant to the question, output an empty array: []
+- Do not include any explanation, preamble, or text outside the JSON array

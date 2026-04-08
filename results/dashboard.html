@@ -294,7 +294,7 @@
 <header>
   <div class="header-left">
     <h1>RAG Architecture Benchmark</h1>
-    <p>10 patterns + 2 baselines · HotpotQA · 500 questions · 3 runs each</p>
+    <p>11 patterns + 2 baselines · HotpotQA · 500 questions · 3 runs each</p>
   </div>
   <div class="header-badges">
     <span class="badge accent">Llama 3.1 8B</span>
@@ -427,13 +427,14 @@ const PATTERNS = [
   { id: 'hyde_rag',         label: 'HyDE',              recall5: 0.602, recall10: 0.679, prec5: 0.242, latency: 14046, tokens: 1039,  faith: 0.623, ansrel: 0.407, sig: 'ns',     delta: '−1.1%',  p: 'ns' },
   { id: 'self_query_rag',   label: 'Self-Query RAG',    recall5: 0.579, recall10: 0.645, prec5: 0.233, latency: 8763,  tokens: 900,   faith: 0.600, ansrel: 0.439, sig: 'worse',  delta: '−4.9%',  p: '***' },
   { id: 'agentic_rag',      label: 'Agentic RAG',       recall5: 0.498, recall10: 0.508, prec5: 0.200, latency: 12206, tokens: 858,   faith: 0.541, ansrel: 0.480, sig: 'worse',  delta: '−18.2%', p: '***' },
+  { id: 'tree_rag',         label: 'Tree RAG',          recall5: 0.562, recall10: 0.562, prec5: 0.226, latency: 47818, tokens: 1801,  faith: 0.567, ansrel: 0.317, sig: 'worse',  delta: '−7.7%',  p: '***' },
   { id: 'graph_rag',        label: 'Graph RAG',         recall5: 0.348, recall10: 0.559, prec5: 0.140, latency: 5964,  tokens: 786,   faith: 0.557, ansrel: 0.451, sig: 'worse',  delta: '−42.9%', p: '***' },
   { id: 'zero_retrieval',   label: 'Zero Retrieval',    recall5: 0.000, recall10: 0.000, prec5: 0.000, latency: 568,   tokens: 36,    faith: 0.370, ansrel: 0.034, sig: 'lower' },
 ];
 
 const COLORS = [
   '#6c63ff','#00d4aa','#ffd166','#ff6b6b','#4cc9f0','#f72585',
-  '#7209b7','#3a0ca3','#4361ee','#4895ef','#560bad','#b5179e'
+  '#7209b7','#3a0ca3','#4361ee','#4895ef','#560bad','#b5179e','#f97316'
 ];
 
 // ── Chart.js defaults ────────────────────────────────────────────────────

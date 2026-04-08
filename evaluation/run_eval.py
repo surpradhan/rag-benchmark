@@ -40,6 +40,7 @@ PATTERN_MODULES = {
     "corrective_rag": "rag_patterns.corrective_rag",
     "agentic_rag": "rag_patterns.agentic_rag",
     "graph_rag": "rag_patterns.graph_rag",
+    "tree_rag":  "rag_patterns.tree_rag",
     "oracle_rag": "rag_patterns.oracle_rag",
 }
 
@@ -53,6 +54,29 @@ def load_pattern(pattern_name: str, config: dict):
     return cls(config)
 
 
+def _checkpoint_path(results_dir: str, pattern_name: str, run_id: int) -> Path:
+    return Path(results_dir) / f".ckpt_{pattern_name}_run{run_id}.json"
+
+
+def _load_checkpoint(ckpt_path: Path) -> dict | None:
+    """Load checkpoint if it exists. Returns None if not found or corrupt."""
+    if not ckpt_path.exists():
+        return None
+    try:
+        with ckpt_path.open() as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
+def _save_checkpoint(ckpt_path: Path, data: dict) -> None:
+    """Atomically write checkpoint via a temp file."""
+    tmp = ckpt_path.with_suffix(".tmp")
+    with tmp.open("w") as f:
+        json.dump(data, f)
+    tmp.replace(ckpt_path)
+
+
 def run_eval(
     pattern_name: str,
     config: dict,
@@ -60,12 +84,16 @@ def run_eval(
     run_id: int,
     k_values: list[int],
     use_ragas: bool = True,
+    checkpoint_every: int = 50,
 ) -> Path:
+    results_dir = config["evaluation"]["results_dir"]
+    ckpt_path = _checkpoint_path(results_dir, pattern_name, run_id)
+
     logger = RunLogger(
         config=config,
         pattern_name=pattern_name,
         run_id=run_id,
-        results_dir=config["evaluation"]["results_dir"],
+        results_dir=results_dir,
     )
 
     pattern = load_pattern(pattern_name, config)
@@ -75,8 +103,29 @@ def run_eval(
     latencies, token_counts = [], []
     per_query_retrieval = []
 
-    print(f"\n[{pattern_name}] run {run_id} — {len(questions)} questions")
-    for i, q in enumerate(questions):
+    # ── Resume from checkpoint if available ──────────────────────────────────
+    ckpt = _load_checkpoint(ckpt_path)
+    start_idx = 0
+    if ckpt:
+        print(f"  [resume] Checkpoint found — resuming from question {ckpt['next_idx']}/{len(questions)}")
+        start_idx = ckpt["next_idx"]
+        for rec in ckpt.get("per_query", []):
+            logger.log_query(rec["question_id"], rec["question"],
+                             {k: v for k, v in rec.items() if k not in ("question_id", "question")})
+            latencies.append(rec["latency_ms"])
+            token_counts.append(rec["token_count"])
+            per_query_retrieval.append({
+                "retrieved_titles": rec["retrieved_titles"],
+                "gold_titles": rec["gold_titles"],
+            })
+            if use_ragas and rec.get("answer"):
+                ragas_questions.append(rec["question"])
+                ragas_answers.append(rec["answer"])
+                ragas_contexts.append(rec.get("_contexts", [""]))
+                ragas_golds.append(rec.get("_gold_answer", ""))
+
+    print(f"\n[{pattern_name}] run {run_id} — {len(questions)} questions (starting at {start_idx})")
+    for i, q in enumerate(questions[start_idx:], start=start_idx):
         if (i + 1) % 50 == 0:
             print(f"  {i+1}/{len(questions)}...")
         try:
@@ -111,6 +160,19 @@ def run_eval(
                 ragas_contexts.append([d["text"] for d in result.retrieved_docs])
                 ragas_golds.append(q.get("answer", ""))
 
+            # ── Checkpoint every N questions ──────────────────────────────
+            if checkpoint_every and (i + 1) % checkpoint_every == 0:
+                ckpt_records = []
+                for rec in logger.per_query:
+                    r = dict(rec)
+                    # stash RAGAS inputs so they survive resume
+                    idx_in_ragas = len(ckpt_records)
+                    if idx_in_ragas < len(ragas_questions):
+                        r["_contexts"]    = ragas_contexts[idx_in_ragas]
+                        r["_gold_answer"] = ragas_golds[idx_in_ragas]
+                    ckpt_records.append(r)
+                _save_checkpoint(ckpt_path, {"next_idx": i + 1, "per_query": ckpt_records})
+
         except Exception as e:
             logger.log_error(q["question_id"], traceback.format_exc())
 
@@ -124,7 +186,13 @@ def run_eval(
         print("  Running RAGAS...")
         agg.update(compute_ragas_metrics(ragas_questions, ragas_answers, ragas_contexts, ragas_golds))
 
-    return logger.save(agg)
+    out_path = logger.save(agg)
+
+    # Remove checkpoint now that the full result is saved
+    if ckpt_path.exists():
+        ckpt_path.unlink()
+
+    return out_path
 
 
 def main() -> None:

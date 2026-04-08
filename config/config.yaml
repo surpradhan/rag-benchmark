@@ -68,6 +68,14 @@ graph_rag:
   top_communities: 5        # communities retrieved per query
   broad_k_multiplier: 20    # main FAISS over-fetch factor before community filtering
 
+tree_rag:
+  persist_dir: ./data/tree_index
+  bm25_candidate_k: 15        # articles shortlisted by BM25 before LLM selection
+  article_select_k: 5         # articles the LLM picks from the BM25 shortlist
+  max_nodes_per_article: 3    # paragraph nodes the LLM selects per article
+  # Note: total LLM calls per query = 1 (article selection) + article_select_k (node navigation) + 1 (generation)
+  # At defaults: 7 LLM calls per query — expect ~3-5x higher token cost vs. Basic RAG
+
 evaluation:
   n_runs: 3
   metrics:

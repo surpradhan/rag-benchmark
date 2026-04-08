@@ -54,7 +54,11 @@ class RunLogger:
             "per_query_metrics": self.per_query,
             "errors": self.errors,
         }
-        with out_path.open("w") as f:
+        # Atomic write: write to a temp file then rename so concurrent saves
+        # don't corrupt the output (the last writer wins cleanly).
+        tmp_path = out_path.with_suffix(".tmp")
+        with tmp_path.open("w") as f:
             json.dump(payload, f, indent=2)
+        tmp_path.replace(out_path)
         print(f"Results saved → {out_path}")
         return out_path

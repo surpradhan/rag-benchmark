@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RAG Architecture Benchmark</title>
-<meta name="description" content="Reproducible benchmark comparing 10 RAG architectures on HotpotQA using Llama 3.1 8B. Open-source, quantitative, publication-ready results.">
+<meta name="description" content="Reproducible benchmark comparing 11 RAG architectures on HotpotQA using Llama 3.1 8B. Open-source, quantitative, publication-ready results.">
 <meta property="og:title" content="RAG Architecture Benchmark">
 <meta property="og:description" content="Which RAG pattern actually performs best? We tested 10 architectures under identical conditions.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -498,7 +498,7 @@ footer {
 <section id="patterns">
   <div class="section-label fade-in">Patterns</div>
   <h2 class="section-title fade-in">All 12 entries</h2>
-  <p class="section-sub fade-in">10 RAG architectures plus 2 baselines — zero-retrieval (lower bound) and oracle (upper bound).</p>
+  <p class="section-sub fade-in">11 RAG architectures plus 2 baselines — zero-retrieval (lower bound) and oracle (upper bound).</p>
   <div class="patterns-grid" id="patternsGrid"></div>
 </section>
 
@@ -531,11 +531,12 @@ const DATA = [
   { id:'self_query_rag',   label:'Self-Query RAG',   pid:'P7', desc:'LLM extracts metadata filters from the natural language query.',   recall5:0.579, recall10:0.645, prec5:0.233, lat:8763,  tok:900,  faith:0.600, ansrel:0.439, sig:'down',  delta:'−4.9%' },
   { id:'agentic_rag',      label:'Agentic RAG',      pid:'P9', desc:'ReAct loop with search, lookup, answer tools (max 5 iterations).',  recall5:0.498, recall10:0.508, prec5:0.200, lat:12206, tok:858,  faith:0.541, ansrel:0.480, sig:'down',  delta:'−18.2%' },
   { id:'graph_rag',        label:'Graph RAG',        pid:'P10',desc:'Entity extraction → knowledge graph → community summaries.',       recall5:0.348, recall10:0.559, prec5:0.140, lat:5964,  tok:786,  faith:0.557, ansrel:0.451, sig:'down',  delta:'−42.9%' },
+  { id:'tree_rag',         label:'Tree RAG',         pid:'P11',desc:'Vectorless BM25 shortlist → LLM article selection → LLM node navigation (PageIndex-inspired).', recall5:0.562, recall10:0.562, prec5:0.226, lat:47818, tok:1801, faith:0.567, ansrel:0.317, sig:'down',  delta:'−7.7%' },
   { id:'zero_retrieval',   label:'Zero Retrieval',   pid:'B0', desc:'LLM parametric knowledge only, no retrieval — lower bound.',       recall5:0.000, recall10:0.000, prec5:0.000, lat:568,   tok:36,   faith:0.370, ansrel:0.034, sig:'bound',  delta:null },
 ];
 
 const COLORS = ['#7c6ffd','#00d9b4','#ffc35a','#ff5e7a','#4cc9f0','#f72585',
-                '#a78bfa','#34d399','#fb923c','#60a5fa','#e879f9','#94a3b8'];
+                '#a78bfa','#34d399','#fb923c','#60a5fa','#e879f9','#94a3b8','#f97316'];
 
 // ── Chart defaults ────────────────────────────────────────────────────────
 Chart.defaults.color = '#6b7299';

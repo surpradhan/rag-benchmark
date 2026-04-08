@@ -16,6 +16,7 @@ PATTERNS=(
   corrective_rag
   agentic_rag
   graph_rag
+  tree_rag
 )
 N_RUNS=3
 DEV_FLAG=""

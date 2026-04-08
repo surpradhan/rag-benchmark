@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from rag_patterns.chunking import load_and_chunk
 from rag_patterns.indexing import build_bm25_index, build_faiss_index
+from rag_patterns.tree_rag import build_tree_index
 
 CORPUS_PATH = Path("data/processed/corpus.json")
 CHUNKS_PATH = Path("data/processed/chunks.json")
@@ -47,6 +48,14 @@ def main(config_path: str = "config/config.yaml", force: bool = False) -> None:
 
     # 3. BM25
     build_bm25_index(chunks, persist_path=bm25_cfg["persist_path"], force=force)
+
+    # 4. Tree index (P11: Tree RAG / Vectorless RAG)
+    tree_cfg = config.get("tree_rag", {})
+    build_tree_index(
+        corpus_path=str(CORPUS_PATH),
+        persist_dir=tree_cfg.get("persist_dir", "./data/tree_index"),
+        force=force,
+    )
 
     print("\nAll indexes built successfully.")
 

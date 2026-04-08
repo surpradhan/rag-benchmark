@@ -15,7 +15,7 @@ import pandas as pd
 import seaborn as sns
 
 sns.set_style("whitegrid")
-PALETTE = sns.color_palette("husl", 12)
+PALETTE = sns.color_palette("husl", 13)
 FIGSIZE_STD = (10, 6)
 FIGSIZE_RADAR = (8, 8)
 DPI = 300
