@@ -25,7 +25,7 @@ Evaluated on **500 questions** from HotpotQA distractor dev set, 3 runs each (`s
 
 | Pattern | Recall@5 | Recall@10 | Precision@5 | Faithfulness | Ans. Relevance | p50 Latency |
 |---|---|---|---|---|---|---|
-| Oracle *(upper bound)* | **1.000** | **1.000** | **0.400** | 0.135 | 0.379 | 2,210 ms |
+| Oracle *(upper bound)* | **1.000** | **1.000** | **0.400** | 0.135 ‡ | 0.379 | 2,210 ms |
 | Re-ranking RAG | **0.706** | 0.732 | **0.284** | **0.725** | 0.427 | 7,947 ms |
 | Hybrid RAG | 0.651 | **0.745** | 0.262 | 0.693 | 0.481 | 6,829 ms |
 | Basic RAG | 0.609 | 0.684 | 0.245 | 0.571 | 0.444 | 6,774 ms |
