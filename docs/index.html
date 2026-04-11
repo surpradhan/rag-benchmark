@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RAG Architecture Benchmark</title>
-<meta name="description" content="Reproducible benchmark comparing 11 RAG architectures on HotpotQA using Llama 3.1 8B. Open-source, quantitative, publication-ready results.">
+<meta name="description" content="Reproducible benchmark comparing 11 RAG architectures + 2 baselines on HotpotQA using Llama 3.1 8B. Open-source, quantitative, publication-ready results.">
 <meta property="og:title" content="RAG Architecture Benchmark">
-<meta property="og:description" content="Which RAG pattern actually performs best? We tested 10 architectures under identical conditions.">
+<meta property="og:description" content="Which RAG pattern actually performs best? We tested 11 architectures + 2 baselines under identical conditions.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -333,7 +333,7 @@ footer {
   <div class="eyebrow"><span class="eyebrow-dot"></span> Open-source · Reproducible · HotpotQA</div>
   <h1>Which RAG pattern<br>actually <span>performs best?</span></h1>
   <p class="hero-sub">
-    A rigorous benchmark comparing 10 retrieval architectures under identical conditions —
+    A rigorous benchmark comparing 11 retrieval architectures under identical conditions —
     same LLM, same embeddings, same evaluation set. No cherry-picking.
   </p>
   <div class="hero-btns">
@@ -342,7 +342,7 @@ footer {
   </div>
   <div class="stat-strip">
     <div class="stat-item">
-      <div class="stat-n purple">10</div>
+      <div class="stat-n purple">11</div>
       <div class="stat-lbl">RAG Patterns</div>
     </div>
     <div class="stat-item">
@@ -366,7 +366,7 @@ footer {
 <section id="findings">
   <div class="section-label fade-in">Key Findings</div>
   <h2 class="section-title fade-in">What we learned</h2>
-  <p class="section-sub fade-in">Statistically significant results (Wilcoxon signed-rank, p&lt;0.05) compared against a Basic RAG baseline across 1,500 evaluated queries.</p>
+  <p class="section-sub fade-in">Statistically significant results (Wilcoxon signed-rank, p&lt;0.05) compared against a Basic RAG baseline across 500 questions (3 deterministic runs each, temperature=0).</p>
   <div class="findings-grid">
     <div class="finding-card win fade-in">
       <div class="finding-icon">🏆</div>
@@ -430,7 +430,7 @@ footer {
   <p class="section-sub fade-in">Mean over 3 runs · 500 HotpotQA questions · significance tested via Wilcoxon signed-rank vs. Basic RAG</p>
   <div class="results-wrap fade-in">
     <div class="results-head">
-      <h3>All 12 entries — sorted by Recall@5</h3>
+      <h3>All 13 entries — sorted by Recall@5</h3>
       <div class="tag-row">
         <span class="tag">seed=42</span>
         <span class="tag">temperature=0</span>
@@ -497,7 +497,7 @@ footer {
 <!-- Patterns -->
 <section id="patterns">
   <div class="section-label fade-in">Patterns</div>
-  <h2 class="section-title fade-in">All 12 entries</h2>
+  <h2 class="section-title fade-in">All 13 entries</h2>
   <p class="section-sub fade-in">11 RAG architectures plus 2 baselines — zero-retrieval (lower bound) and oracle (upper bound).</p>
   <div class="patterns-grid" id="patternsGrid"></div>
 </section>
