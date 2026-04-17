@@ -117,6 +117,13 @@ class CorrectiveRag(BaseRAG):
         Returns:
             (final_docs, final_ratings, judge_tokens, reformulate_tokens, n_retries)
         """
+        # Reset instance state upfront so stale values are never observable if an
+        # exception is raised mid-run.
+        self._last_ratings = []
+        self._last_n_retries = 0
+        self._last_judge_tokens = 0
+        self._last_reformulate_tokens = 0
+
         total_judge_tokens = 0
         total_reformulate_tokens = 0
         n_retries = 0
@@ -165,6 +172,8 @@ class CorrectiveRag(BaseRAG):
         return final_docs, final_ratings, total_judge_tokens, total_reformulate_tokens, n_retries
 
     def retrieve(self, query: str, top_k: int) -> list[dict]:
+        # Note: includes LLM judge calls (and possibly reformulation calls) —
+        # not a cheap FAISS lookup like other patterns.
         final_docs, final_ratings, judge_tokens, reformulate_tokens, n_retries = (
             self._corrective_retrieve(query, top_k)
         )
