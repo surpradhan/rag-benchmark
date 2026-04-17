@@ -109,20 +109,14 @@ class CorrectiveRag(BaseRAG):
                 ):
                     pool[cid] = (doc, rating)
 
-    def retrieve(self, query: str, top_k: int) -> list[dict]:
-        """Delegates to run() so behaviour is always consistent."""
-        return self.run(query, top_k).retrieved_docs
+    def _corrective_retrieve(
+        self, query: str, top_k: int
+    ) -> tuple[list[dict], list[str], int, int, int]:
+        """Run the corrective retrieval loop (without generation).
 
-    def generate(self, query: str, docs: list[dict]) -> tuple[str, int]:
-        context = "\n\n".join(d["text"] for d in docs)
-        prompt = self._qa_template.format(context=context, question=query)
-        return self.llm.complete(prompt)
-
-    def run(self, query: str, top_k: int | None = None, **kwargs) -> RAGResult:
-        if top_k is None:
-            top_k = self.config.get("retrieval", {}).get("top_k", 5)
-
-        t0 = time.perf_counter()
+        Returns:
+            (final_docs, final_ratings, judge_tokens, reformulate_tokens, n_retries)
+        """
         total_judge_tokens = 0
         total_reformulate_tokens = 0
         n_retries = 0
@@ -165,8 +159,34 @@ class CorrectiveRag(BaseRAG):
             )
         else:
             sorted_pool = list(pool.values())  # already in FAISS cosine order
+
         final_docs = [d for d, _ in sorted_pool[:top_k]]
         final_ratings = [r for _, r in sorted_pool[:top_k]]
+        return final_docs, final_ratings, total_judge_tokens, total_reformulate_tokens, n_retries
+
+    def retrieve(self, query: str, top_k: int) -> list[dict]:
+        final_docs, final_ratings, judge_tokens, reformulate_tokens, n_retries = (
+            self._corrective_retrieve(query, top_k)
+        )
+        self._last_ratings = final_ratings
+        self._last_n_retries = n_retries
+        self._last_judge_tokens = judge_tokens
+        self._last_reformulate_tokens = reformulate_tokens
+        return final_docs
+
+    def generate(self, query: str, docs: list[dict]) -> tuple[str, int]:
+        context = "\n\n".join(d["text"] for d in docs)
+        prompt = self._qa_template.format(context=context, question=query)
+        return self.llm.complete(prompt)
+
+    def run(self, query: str, top_k: int | None = None, **kwargs) -> RAGResult:
+        if top_k is None:
+            top_k = self.config.get("retrieval", {}).get("top_k", 5)
+
+        t0 = time.perf_counter()
+        final_docs, final_ratings, total_judge_tokens, total_reformulate_tokens, n_retries = (
+            self._corrective_retrieve(query, top_k)
+        )
 
         answer, gen_tokens = self.generate(query, final_docs)
         latency_ms = (time.perf_counter() - t0) * 1000

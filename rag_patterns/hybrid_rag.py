@@ -64,6 +64,7 @@ class HybridRag(BaseRAG):
         self.faiss_index, self.faiss_meta = load_faiss_index(vs_cfg.get("persist_dir", "./data/faiss_index"))
         self.bm25, self.bm25_meta = load_bm25_index(bm25_cfg.get("persist_path", "./data/bm25_index/bm25_index.pkl"))
         self.rrf_k = retrieval_cfg.get("rrf_k", 60)
+        self.bm25_top_k_multiplier = retrieval_cfg.get("bm25_top_k_multiplier", 3)
         self.llm = LLMClient(config)
         self._prompt_template = _load_prompt("basic_qa.txt")
 
@@ -73,7 +74,7 @@ class HybridRag(BaseRAG):
 
     def retrieve(self, query: str, top_k: int) -> list[dict]:
         # Retrieve more candidates from each source before fusing
-        candidate_k = top_k * 3
+        candidate_k = top_k * self.bm25_top_k_multiplier
         vector_results = faiss_search(self.faiss_index, self.faiss_meta, self._embed_query(query), candidate_k)
         bm25_results = bm25_search(self.bm25, self.bm25_meta, query, candidate_k)
         return _rrf_fuse(vector_results, bm25_results, k=self.rrf_k, top_n=top_k)

@@ -42,6 +42,7 @@ retrieval:
   top_k_values: [5, 10]     # report Recall/Precision at both
   similarity_metric: cosine
   rrf_k: 60                 # RRF constant (Hybrid RAG)
+  bm25_top_k_multiplier: 3  # per-source candidate over-fetch factor before RRF fusion (Hybrid RAG)
   rerank_initial_k: 20      # initial FAISS candidates before cross-encoder (Re-ranking RAG)
   cross_encoder_model: cross-encoder/ms-marco-MiniLM-L-6-v2
   multiquery_n_variants: 3  # number of LLM-generated query variants (Multi-Query RAG)
